@@ -1,0 +1,71 @@
+Installing ProxySQL on PXC nodes - Centos 7 - pmmdemo
+-----
+
+. Enable the percona experimental repo
+
+  edit /etc/yum.repos.d/percona-release.repo 
+
+  enable experimental ($basearch and noarch)
+
+. Install ProxySQL
+
+   # yum install -y proxysql
+
+. Enable and start services
+  
+    systemctl enable proxysql
+    systemctl start proxysql
+
+. set proxysql admin password
+
+   - left as admin:admin and bound to 127.0.0.1
+
+. configuring proxysql
+
+   - create monitor user in mysql database
+
+     GRANT USAGE ON *.* TO monitor@'%' IDENTIFIED BY 'm0n1tor';
+
+   - insert nodes (sqlproxy admin db)
+
+     # mysql -h127.0.0.1 -P6032 -uadmin -padmin
+
+     INSERT INTO mysql_servers(hostgroup_id,hostname,port,comment) VALUES (0,'10.91.142.80',3306,'pxc56-1');
+     INSERT INTO mysql_servers(hostgroup_id,hostname,port,comment) VALUES (0,'10.91.142.82',3306,'pxc56-2');
+     INSERT INTO mysql_servers(hostgroup_id,hostname,port,comment) VALUES (0,'10.91.142.88',3306,'pxc56-3');
+     LOAD MYSQL SERVERS TO RUNTIME;
+     SAVE MYSQL SERVERS TO DISK;
+
+   - set the monitor user in proxysql
+
+     # mysql -h127.0.0.1 -P6032 -uadmin -padmin
+
+     UPDATE global_variables SET variable_value='monitor' WHERE variable_name='mysql-monitor_username';
+     UPDATE global_variables SET variable_value='m0n1tor' WHERE variable_name='mysql-monitor_password';
+     LOAD MYSQL VARIABLES TO RUNTIME;
+     SAVE MYSQL VARIABLES TO DISK;
+
+. create sysbench user:
+
+   - in sqlproxy admin db
+
+     # mysql -h127.0.0.1 -P6032 -uadmin -padmin
+
+     insert into mysql_users (username,password,active,default_schema) values ('sbtest','sbtest',1,'innodb');
+     LOAD MYSQL USERS TO RUNTIME;
+     SAVE MYSQL USERS TO DISK;
+
+. Setup galera scheduler (sqlproxy admin db)
+
+     # mysql -h127.0.0.1 -P6032 -uadmin -padmin
+
+     INSERT INTO scheduler(id,active,interval_ms,filename,arg1) VALUES (10,1,2000,'/usr/bin/proxysql_galera_checker','0');
+     LOAD SCHEDULER TO RUNTIME;SAVE SCHEDULER TO DISK;
+
+. Monitor (from first PXC node)
+
+  watch -n 1 'mysql -h 127.0.0.1 -P 6032 -uadmin -padmin -t \
+    -e " select *from mysql_servers order by hostgroup_id,hostname ;" \
+    -e "select * from stats_mysql_connection_pool order by hostgroup,srv_host ;" 2> /dev/null'
+ 
+  Note: Ctrl-C to stop
