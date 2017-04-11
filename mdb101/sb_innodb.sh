@@ -4,6 +4,23 @@ set -o xtrace
 
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
+sysbench \
+    --db-driver=mysql \
+    --mysql-socket=$SOCKET \
+    --mysql-user=sbtest \
+    --mysql-password=sbtest \
+    --mysql-db=innodb \
+    /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
+    cleanup
+sysbench \
+    --db-driver=mysql \
+    --mysql-socket=$SOCKET \
+    --mysql-user=sbtest \
+    --mysql-password=sbtest \
+    --mysql-db=innodb \
+    /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
+    prepare
+
 while true; do
     sysbench \
         --rate=20 \
