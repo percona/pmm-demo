@@ -7,9 +7,9 @@ SOCKET=${1:-/var/lib/mysql/mysql.sock}
 while true; do
     RND=$(( RANDOM % 7000 * 10000 ))
     mysql \
-        -S $SOCKET \
-        -u sbtest \
-        -psbtest \
+        --socket=$SOCKET \
+        --user=sbtest \
+        --password=sbtest \
         -e "
             SELECT avg(length(c))
             FROM   innodb.sbtest1

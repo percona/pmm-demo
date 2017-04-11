@@ -6,7 +6,6 @@ SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do
     sysbench \
-        --mysql-socket=$SOCKET \
         --rate=20 \
         --threads=64 \
         --report-interval=10 \
@@ -14,6 +13,8 @@ while true; do
         --events=0 \
         --rand-type=pareto \
         --oltp-table-size=100000000 \
+        --db-driver=mysql \
+        --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=innodb \
