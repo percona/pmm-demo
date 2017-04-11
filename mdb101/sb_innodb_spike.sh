@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o xtrace
+
 while true; do
     sysbench \
         --num-threads=64 \
@@ -13,6 +15,6 @@ while true; do
         --mysql-db=innodb \
         --oltp-reconnect \
         --test=/usr/share/doc/sysbench/tests/db/update_index.lua \
-        run > /dev/null
+        run
 	sleep 3300
 done

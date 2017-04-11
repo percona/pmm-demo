@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o xtrace
+
 while true; do
     sysbench \
         --tx-rate=20 \
@@ -14,6 +16,6 @@ while true; do
         --mysql-db=innodb \
         --oltp-reconnect \
         --test=/usr/share/doc/sysbench/tests/db/oltp.lua \
-        run > /dev/null
+        run
     sleep 60
 done

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -o xtrace
+
 while true; do
     RND=$(( RANDOM % 7000 * 10000 ))
     mysql \
@@ -9,6 +11,6 @@ while true; do
             SELECT avg(length(c))
             FROM   innodb.sbtest1
             WHERE  id between ${RND} and ${RND}+30000000
-        " > /dev/null
+        "
     sleep 1000
 done
