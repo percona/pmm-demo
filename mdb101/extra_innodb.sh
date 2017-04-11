@@ -2,9 +2,12 @@
 
 set -o xtrace
 
+SOCKET=${1:-/var/lib/mysql/mysql.sock}
+
 while true; do
     RND=$(( RANDOM % 7000 * 10000 ))
     mysql \
+        -S $SOCKET \
         -u sbtest \
         -psbtest \
         -e "

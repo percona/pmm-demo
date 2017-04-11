@@ -2,8 +2,11 @@
 
 set -o xtrace
 
+SOCKET=${1:-/var/lib/mysql/mysql.sock}
+
 while true; do
     sysbench \
+        --mysql-socket=$SOCKET \
         --num-threads=64 \
         --report-interval=10 \
         --max-time=300 \
