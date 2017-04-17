@@ -2,6 +2,7 @@
 
 set -o xtrace
 
+DBNAME=innodb
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do
@@ -10,9 +11,10 @@ while true; do
         --socket=$SOCKET \
         --user=sbtest \
         --password=sbtest \
+        --database=${DBNAME} \
         -e "
             SELECT avg(length(c))
-            FROM   innodb.sbtest1
+            FROM   sbtest1
             WHERE  id between ${RND} and ${RND}+30000000
         "
     sleep 1000

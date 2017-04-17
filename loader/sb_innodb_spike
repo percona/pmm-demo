@@ -2,6 +2,7 @@
 
 set -o xtrace
 
+DBNAME=innodb
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do
@@ -16,7 +17,7 @@ while true; do
         --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
-        --mysql-db=innodb \
+        --mysql-db=$DBNAME \
         --oltp-reconnect \
         /usr/share/sysbench/tests/include/oltp_legacy/update_index.lua \
         run

@@ -2,18 +2,20 @@
 
 set -o xtrace
 
+DBNAME=innodb
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 mysql \
     --socket=$SOCKET \
     --user=sbtest \
     --password=sbtest \
+    --database=${DBNAME} \
     -e "
-        DROP TABLE IF EXISTS innodb.deadlock;
-        CREATE TABLE innodb.deadlock (
+        DROP TABLE IF EXISTS deadlock;
+        CREATE TABLE deadlock (
             pk int unsigned auto_increment primary key
         ) ENGINE=innodb;
-        INSERT INTO innodb.deadlock (pk) VALUES (1);
+        INSERT INTO deadlock (pk) VALUES (1);
     "
 
 while true; do
@@ -21,10 +23,11 @@ while true; do
         --socket=$SOCKET \
         --user=sbtest \
         --password=sbtest \
+        --database=${DBNAME} \
         -e "
             START TRANSACTION;
-            SELECT * FROM innodb.deadlock WHERE pk = 1 LOCK IN SHARE MODE;
+            SELECT * FROM deadlock WHERE pk = 1 LOCK IN SHARE MODE;
             SELECT SLEEP(1);
-            DELETE FROM innodb.deadlock where pk = 1;
+            DELETE FROM deadlock where pk = 1;
         "
 done

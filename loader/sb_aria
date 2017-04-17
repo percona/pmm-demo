@@ -2,27 +2,34 @@
 
 set -o xtrace
 
+DBNAME=aria
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
+mysql \
+    --socket=$SOCKET \
+    --user=sbtest \
+    --password=sbtest \
+    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
 sysbench \
     --mysql-socket=$SOCKET \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
-    --mysql-db=aria \
+    --mysql-db=$DBNAME \
     /usr/share/sysbench/oltp_read_write.lua \
     cleanup
 sysbench \
     --mysql-socket=$SOCKET \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
-    --mysql-db=aria \
+    --mysql-db=$DBNAME \
     /usr/share/sysbench/oltp_read_write.lua \
     prepare
 mysql \
     --socket=$SOCKET \
     --user=sbtest \
     --password=sbtest \
-    -e "ALTER TABLE aria.sbtest1 ENGINE=aria, TRANSACTIONAL=1"
+    --database=$DBNAME \
+    -e "ALTER TABLE sbtest1 ENGINE=aria, TRANSACTIONAL=1"
 
 while true; do
     sysbench \
@@ -35,7 +42,7 @@ while true; do
         --rand-type=pareto \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
-        --mysql-db=aria \
+        --mysql-db=$DBNAME \
         --point_selects=1 \
         /usr/share/sysbench/oltp_read_write.lua \
         run

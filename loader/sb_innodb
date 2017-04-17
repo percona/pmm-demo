@@ -2,14 +2,20 @@
 
 set -o xtrace
 
+DBNAME=innodb
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
+mysql \
+    --socket=$SOCKET \
+    --user=sbtest \
+    --password=sbtest \
+    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
 sysbench \
     --db-driver=mysql \
     --mysql-socket=$SOCKET \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
-    --mysql-db=innodb \
+    --mysql-db=$DBNAME \
     /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
     cleanup
 sysbench \
@@ -17,7 +23,7 @@ sysbench \
     --mysql-socket=$SOCKET \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
-    --mysql-db=innodb \
+    --mysql-db=$DBNAME \
     /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
     prepare
 
@@ -34,7 +40,7 @@ while true; do
         --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
-        --mysql-db=innodb \
+        --mysql-db=$DBNAME \
         --oltp-reconnect \
         /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
         run
