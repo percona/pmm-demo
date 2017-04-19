@@ -20,9 +20,9 @@ remove_all() {
     local SOCKET_NAME=$1
     pushd $ROOT_DIR/loader
         for LOADER in $(ls); do
-            if [ -e "/etc/systemd/system/pmm-${LOADER}-${SOCKET_NAME}.service" ]; then
-                systemctl --no-reload disable "pmm-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
-                systemctl stop "pmm-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
+            if [ -e "/etc/systemd/system/loader-${LOADER}-${SOCKET_NAME}.service" ]; then
+                systemctl --no-reload disable "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
+                systemctl stop "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
             fi
         done
     popd
@@ -32,7 +32,7 @@ create_loader() {
     local LOADER=$1
     local SOCKET_PATH=$2
     local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/.sock$//')
-    cat - <<-EOF >/etc/systemd/system/pmm-${LOADER}-${SOCKET_NAME}.service
+    cat - <<-EOF >/etc/systemd/system/loader-${LOADER}-${SOCKET_NAME}.service
 		[Unit]
 		Description=PMM Loader ${LOADER} for ${SOCKET_NAME} socket
 
@@ -46,8 +46,9 @@ create_loader() {
 		[Install]
 		WantedBy=multi-user.target
 	EOF
-    systemctl preset "pmm-${LOADER}-${SOCKET_NAME}"
-    systemctl start "pmm-${LOADER}-${SOCKET_NAME}"
+    systemctl preset "loader-${LOADER}-${SOCKET_NAME}"
+    systemctl enable "loader-${LOADER}-${SOCKET_NAME}"
+    systemctl start  "loader-${LOADER}-${SOCKET_NAME}"
 }
 
 main() {
