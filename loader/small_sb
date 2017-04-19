@@ -3,7 +3,7 @@
 set -o xtrace
 
 DBNAME=qc
-ENGINE=innodb
+ENGINE=small
 TABLE_SIZE=1000000
 TEST=/usr/share/sysbench/tests/include/oltp_legacy/select.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}

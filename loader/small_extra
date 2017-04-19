@@ -2,7 +2,7 @@
 
 set -o xtrace
 
-DBNAME=qc
+DBNAME=small
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do

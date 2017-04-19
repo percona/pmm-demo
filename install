@@ -5,9 +5,12 @@ set -o xtrace
 
 declare -A SERVICES=(
     ["md"]="innodb_sb innodb_sb_spike innodb_extra aria_sb deadlock_holder deadlock_requestor defrag_sb defrag_extra onlineddl_sb onlineddl_sb"
-    ["ps55"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra"
-    ["ps56"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra"
-    ["ps57"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra tokudb_sb tokudb_extra"
+    ["ps55"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
+    ["ps56"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
+    ["ps57"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra tokudb_sb tokudb_extra"
+    ["pxc56-1"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_update"
+    ["pxc56-2"]="innodb_sb innodb_sb_spike innodb_extra"
+    ["pxc56-3"]="innodb_sb innodb_sb_spike innodb_extra cluster_mess"
 )
 
 ROOT_DIR=$(realpath "$(dirname $0)")
