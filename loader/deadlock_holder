@@ -2,9 +2,14 @@
 
 set -o xtrace
 
-DBNAME=innodb
+DBNAME=deadlock
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
+mysql \
+    --socket=$SOCKET \
+    --user=sbtest \
+    --password=sbtest \
+    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
 mysql \
     --socket=$SOCKET \
     --user=sbtest \

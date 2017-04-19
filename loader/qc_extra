@@ -2,7 +2,7 @@
 
 set -o xtrace
 
-DBNAME=deadlock
+DBNAME=qc
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do
@@ -12,7 +12,9 @@ while true; do
         --password=sbtest \
         --database=${DBNAME} \
         -e "
-            START TRANSACTION;
-            DELETE FROM deadlock where pk = 1;
+            UPDATE sbtest1
+            SET    k=rand()*3
+            WHERE  id=5
         "
+    sleep 550
 done

@@ -3,6 +3,9 @@
 set -o xtrace
 
 DBNAME=innodb
+ENGINE=innodb
+TABLE_SIZE=100000000
+TEST=/usr/share/sysbench/tests/include/oltp_legacy/update_index.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 while true; do
@@ -12,14 +15,15 @@ while true; do
         --time=300 \
         --events=0 \
         --rand-type=pareto \
-        --oltp-table-size=100000000 \
         --db-driver=mysql \
         --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
+        --mysql-table-engine=$ENGINE \
         --oltp-reconnect \
-        /usr/share/sysbench/tests/include/oltp_legacy/update_index.lua \
+        --oltp-table-size=$TABLE_SIZE \
+        $TEST \
         run
     sleep 3300
 done

@@ -2,7 +2,10 @@
 
 set -o xtrace
 
-DBNAME=innodb
+DBNAME=myisam
+ENGINE=myisam
+TABLE_SIZE=100000000
+TEST=/usr/share/sysbench/tests/include/oltp_legacy/oltp.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 mysql \
@@ -16,33 +19,28 @@ sysbench \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
     --mysql-db=$DBNAME \
-    /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
-    cleanup
-sysbench \
-    --db-driver=mysql \
-    --mysql-socket=$SOCKET \
-    --mysql-user=sbtest \
-    --mysql-password=sbtest \
-    --mysql-db=$DBNAME \
-    /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
+    --mysql-table-engine=$ENGINE \
+    --oltp-table-size=$TABLE_SIZE \
+    $TEST \
     prepare
 
 while true; do
     sysbench \
-        --rate=20 \
+        --rate=3 \
         --threads=64 \
         --report-interval=10 \
         --time=0 \
         --events=0 \
         --rand-type=pareto \
-        --oltp-table-size=100000000 \
         --db-driver=mysql \
         --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
+        --mysql-table-engine=$ENGINE \
         --oltp-reconnect \
-        /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
+        --oltp-table-size=$TABLE_SIZE \
+        $TEST \
         run
     sleep 60
 done

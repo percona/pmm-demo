@@ -4,7 +4,10 @@ set -o errexit
 set -o xtrace
 
 declare -A SERVICES=(
-    ["md"]="deadlock_holder deadlock_requestor defrag_innodb extra_innodb onlineddl_innodb sb_aria sb_innodb sb_innodb_spike"
+    ["md"]="innodb_sb innodb_sb_spike innodb_extra aria_sb deadlock_holder deadlock_requestor defrag_sb defrag_extra onlineddl_sb onlineddl_sb"
+    ["ps55"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra"
+    ["ps56"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra"
+    ["ps57"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra qc_sb qc_extra tokudb_sb tokudb_extra"
 )
 
 ROOT_DIR=$(realpath "$(dirname $0)")
@@ -61,7 +64,7 @@ main() {
 
     remove_all "$SOCKET_NAME"
 
-    mysql -S "${SOCKET_PATH}" < $ROOT_DIR/grants.sql
+    mysql --user root --socket "${SOCKET_PATH}" < $ROOT_DIR/grants.sql
     for LOADER in ${SERVICES[$TYPE]}; do
         create_loader "$LOADER" "$SOCKET_PATH" "$SOCKET_NAME"
     done

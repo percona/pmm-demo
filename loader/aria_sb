@@ -3,6 +3,8 @@
 set -o xtrace
 
 DBNAME=aria
+ENGINE=aria
+TEST=/usr/share/sysbench/oltp_read_write.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 mysql \
@@ -11,18 +13,13 @@ mysql \
     --password=sbtest \
     -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
 sysbench \
+    --db-driver=mysql \
     --mysql-socket=$SOCKET \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
     --mysql-db=$DBNAME \
-    /usr/share/sysbench/oltp_read_write.lua \
-    cleanup
-sysbench \
-    --mysql-socket=$SOCKET \
-    --mysql-user=sbtest \
-    --mysql-password=sbtest \
-    --mysql-db=$DBNAME \
-    /usr/share/sysbench/oltp_read_write.lua \
+    --mysql-table-engine=$ENGINE \
+    $TEST \
     prepare
 mysql \
     --socket=$SOCKET \
@@ -33,18 +30,20 @@ mysql \
 
 while true; do
     sysbench \
-        --mysql-socket=$SOCKET \
         --rate=1 \
         --threads=1 \
         --report-interval=1 \
         --time=0 \
         --events=0 \
         --rand-type=pareto \
+        --db-driver=mysql \
+        --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
+        --mysql-table-engine=$ENGINE \
         --point_selects=1 \
-        /usr/share/sysbench/oltp_read_write.lua \
+        $TEST \
         run
     sleep 5
 done
