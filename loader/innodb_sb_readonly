@@ -2,10 +2,10 @@
 
 set -o xtrace
 
-DBNAME=small
+DBNAME=innodb
 ENGINE=innodb
-TABLE_SIZE=1000000
-TEST=/usr/share/sysbench/tests/include/oltp_legacy/select.lua
+TABLE_SIZE=100000000
+TEST=/usr/share/sysbench/tests/include/oltp_legacy/oltp.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
 mysql \
@@ -21,7 +21,7 @@ sysbench \
     --mysql-db=$DBNAME \
     --mysql-table-engine=$ENGINE \
     --oltp-table-size=$TABLE_SIZE \
-    /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua \
+    $TEST \
     prepare
 
 while true; do
@@ -38,6 +38,7 @@ while true; do
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
         --mysql-table-engine=$ENGINE \
+        --oltp-read-only=on \
         --oltp-reconnect \
         --oltp-table-size=$TABLE_SIZE \
         $TEST \
