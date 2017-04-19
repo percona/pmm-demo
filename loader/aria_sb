@@ -4,6 +4,7 @@ set -o xtrace
 
 DBNAME=aria
 ENGINE=aria
+TABLE_SIZE=1000000
 TEST=/usr/share/sysbench/oltp_read_write.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
@@ -18,7 +19,8 @@ sysbench \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
     --mysql-db=$DBNAME \
-    --mysql-table-engine=$ENGINE \
+    --mysql_storage_engine=$ENGINE \
+    --table_size=$TABLE_SIZE \
     $TEST \
     prepare
 mysql \
@@ -41,7 +43,8 @@ while true; do
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
-        --mysql-table-engine=$ENGINE \
+        --mysql_storage_engine=$ENGINE \
+        --table_size=$TABLE_SIZE \
         --point_selects=1 \
         $TEST \
         run

@@ -19,8 +19,8 @@ sysbench \
     --mysql-user=sbtest \
     --mysql-password=sbtest \
     --mysql-db=$DBNAME \
-    --mysql-table-engine=$ENGINE \
-    --oltp-table-size=$TABLE_SIZE \
+    --mysql_storage_engine=$ENGINE \
+    --table_size=$TABLE_SIZE \
     $TEST \
     prepare
 
@@ -37,9 +37,8 @@ while true; do
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
-        --mysql-table-engine=$ENGINE \
-        --oltp-reconnect \
-        --oltp-table-size=$TABLE_SIZE \
+        --mysql_storage_engine=$ENGINE \
+        --table_size=$TABLE_SIZE \
         $TEST \
         run
     sleep 60
