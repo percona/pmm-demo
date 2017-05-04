@@ -1,5 +1,7 @@
 nohup sh ./sb_innodb.sh > /dev/null &
 sleep 60
+nohup sh ./sb_innodb_icp.sh > /dev/null &
+sleep 60
 nohup sh ./sb_myisam.sh > /dev/null &
 sleep 60
 nohup sh ./sb_innodb_qc.sh > /dev/null &
