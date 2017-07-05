@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -o errexit
+set -o xtrace
+
+declare -A SERVICES=(
+    ["md"]="innodb_sb innodb_sb_spike innodb_extra aria_sb deadlock_holder deadlock_requestor defrag_sb defrag_extra onlineddl_sb onlineddl_extra"
+    ["ps55"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
+    ["ps56"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
+    ["ps57"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra tokudb_sb tokudb_extra"
+    ["ps57r"]="innodb_sb_readonly innodb_extra small_sb"
+    ["pxc56-1"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_update"
+    ["pxc56-2"]="innodb_sb innodb_sb_spike innodb_extra"
+    ["pxc56-3"]="innodb_sb innodb_sb_spike innodb_extra cluster_mess"
+)
+
+ROOT_DIR=$(realpath "$(dirname $0)")
+
+remove_all() {
+    local SOCKET_NAME=$1
+    pushd $ROOT_DIR/loader
+        for LOADER in $(ls); do
+            if [ -e "/etc/systemd/system/loader-${LOADER}-${SOCKET_NAME}.service" ]; then
+                systemctl --no-reload disable "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
+                systemctl stop "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
+            fi
+        done
+    popd
+}
+
+create_loader() {
+    local LOADER=$1
+    local SOCKET_PATH=$2
+    local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/.sock$//')
+    cat - <<-EOF >/etc/systemd/system/loader-${LOADER}-${SOCKET_NAME}.service
+		[Unit]
+		Description=PMM Loader ${LOADER} for ${SOCKET_NAME} socket
+
+		[Service]
+		StartLimitInterval=5
+		StartLimitBurst=10
+		ExecStart=$ROOT_DIR/loader/${LOADER} $SOCKET_PATH
+		Restart=always
+		RestartSec=120
+
+		[Install]
+		WantedBy=multi-user.target
+	EOF
+    systemctl preset "loader-${LOADER}-${SOCKET_NAME}"
+    systemctl enable "loader-${LOADER}-${SOCKET_NAME}"
+    systemctl start  "loader-${LOADER}-${SOCKET_NAME}"
+}
+
+main() {
+    local TYPE=$1
+    local SOCKET_PATH=$2
+    local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/.sock$//')
+
+    if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
+        echo "unknown server type"
+        echo "usage: $0 {ps|pxc|mo|ms|md} /path/to/service.socket"
+        exit 1
+    fi
+    if [[ -z "$SOCKET_PATH" ]] || [[ ! -S "$SOCKET_PATH" ]]; then
+        echo "cannot find $SOCKET_PATH socket"
+        echo "usage: $0 {ps|pxc|mo|ms|md} /path/to/service.socket"
+        exit 1
+    fi
+
+    remove_all "$SOCKET_NAME"
+
+    mysql --user root --socket "${SOCKET_PATH}" < $ROOT_DIR/grants.sql
+    for LOADER in ${SERVICES[$TYPE]}; do
+        create_loader "$LOADER" "$SOCKET_PATH" "$SOCKET_NAME"
+    done
+}
+
+main "$@"
+exit 0
