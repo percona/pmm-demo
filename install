@@ -12,6 +12,7 @@ declare -A SERVICES=(
     ["pxc56-1"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_update"
     ["pxc56-2"]="innodb_sb innodb_sb_spike innodb_extra"
     ["pxc56-3"]="innodb_sb innodb_sb_spike innodb_extra cluster_mess"
+    ["psrocksdb"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_extra rocksdb_sb rocksdb_extra"
 )
 
 ROOT_DIR=$(realpath "$(dirname $0)")
