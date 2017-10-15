@@ -10,8 +10,11 @@ declare -A SERVICES=(
     ["ps57"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra tokudb_sb tokudb_extra"
     ["ps57r"]="innodb_sb_readonly innodb_extra small_sb"
     ["pxc56-1"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_update"
-    ["pxc56-2"]="innodb_sb innodb_sb_spike innodb_extra"
-    ["pxc56-3"]="innodb_sb innodb_sb_spike innodb_extra cluster_mess"
+    ["pxc56-2"]="innodb_sb_2 innodb_sb_spike_2 innodb_extra_2"
+    ["pxc56-3"]="innodb_sb_3 innodb_sb_spike_3 innodb_extra_3 cluster_mess"
+    ["pxc57-1"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_update"
+    ["pxc57-2"]="innodb_sb_2 innodb_sb_spike_2 innodb_extra_2"
+    ["pxc57-3"]="innodb_sb_3 innodb_sb_spike_3 innodb_extra_3 cluster_mess"
     ["psrocksdb"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_extra rocksdb_sb rocksdb_extra"
 )
 

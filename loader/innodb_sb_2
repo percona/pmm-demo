@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -o xtrace
+
+DBNAME=innodb_2
+ENGINE=innodb
+TABLE_SIZE=100000000
+TEST=/usr/share/sysbench/tests/include/oltp_legacy/oltp.lua
+SOCKET=${1:-/var/lib/mysql/mysql.sock}
+
+mysql \
+    --socket=$SOCKET \
+    --user=sbtest \
+    --password=sbtest \
+    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
+sysbench \
+    --db-driver=mysql \
+    --mysql-socket=$SOCKET \
+    --mysql-user=sbtest \
+    --mysql-password=sbtest \
+    --mysql-db=$DBNAME \
+    --mysql-table-engine=$ENGINE \
+    --oltp-table-size=$TABLE_SIZE \
+    $TEST \
+    prepare
+
+while true; do
+    sysbench \
+        --rate=20 \
+        --threads=64 \
+        --report-interval=10 \
+        --time=0 \
+        --events=0 \
+        --rand-type=pareto \
+        --db-driver=mysql \
+        --mysql-socket=$SOCKET \
+        --mysql-user=sbtest \
+        --mysql-password=sbtest \
+        --mysql-db=$DBNAME \
+        --mysql-table-engine=$ENGINE \
+        --oltp-reconnect \
+        --oltp-table-size=$TABLE_SIZE \
+        $TEST \
+        run
+    sleep 60
+done
