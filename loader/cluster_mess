@@ -1,25 +1,46 @@
-# Mess with this cluster node by Restarting it or causing full SST by removing db directory
-# This script must be ran as root
+# Mess with this cluster node by re-starting it or causing full SST by removing db directory
+# This script must be run as root
+
+# do a big sleep so that tables can finish loading
+sleep 3600
 
 while true
 do
+echo "`date` - starting loop"
 # Normal Cluster restart
-service mysql restart
+echo "`date` - restarting mysqld"
+systemctl stop mysql
+echo "`date` - stopped, now starting"
+systemctl start mysql
+echo "`date` - sleep 600"
 sleep 600
 # Stop cluster wait and start again
-service mysql stop
+echo "`date` - stopping"
+systemctl stop mysql
+echo "`date` - sleep 300"
 sleep 300
-service mysql start
+echo "`date` - starting up, probably SST"
+systemctl start mysql
+echo "`date` - sleep 1200"
 sleep 1200
 # Kill MySQL process and see how cluster behaves
 # Looks like broken now killall -9 mysqld
 #sleep 600
 # Normal Cluster restart again
-service mysql restart
+echo "`date` - restart"
+systemctl stop mysql
+echo "`date` - stopped, now starting"
+systemctl start mysql
+echo "`date` - sleep 1800"
 sleep 1800
 # Remove MySQL directory and so do SST
-service mysql stop
+echo "`date` - stopping mysqld"
+systemctl stop mysql
+echo "`date` - delete datadir"
 rm -rf /var/lib/mysql/*
-service mysql start
+echo "`date` - starting"
+systemctl start mysql
+echo "`date` - sleep 900"
 sleep 900
+echo "`date` - end loop"
 done
