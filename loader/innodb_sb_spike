@@ -8,15 +8,23 @@ TABLE_SIZE=100000000
 TEST=/usr/share/sysbench/tests/include/oltp_legacy/update_index.lua
 SOCKET=${1:-/var/lib/mysql/mysql.sock}
 
+if [ -S "$SOCKET" ]; then
+    CONNECTION="--socket=$SOCKET"
+    SB_CONNECTION="--mysql-socket=$SOCKET"
+else
+    CONNECTION="--host=$SOCKET"
+    SB_CONNECTION="--mysql-host=$SOCKET"
+fi
+
 while true; do
     sysbench \
+        $SB_CONNECTION \
         --threads=64 \
         --report-interval=10 \
         --time=300 \
         --events=0 \
         --rand-type=pareto \
         --db-driver=mysql \
-        --mysql-socket=$SOCKET \
         --mysql-user=sbtest \
         --mysql-password=sbtest \
         --mysql-db=$DBNAME \
