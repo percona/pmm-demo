@@ -516,64 +516,62 @@ Resources:
   ## - !GetAtt RDSSecurityGroup.GroupId
     DeletionPolicy: Delete
 
-  LoaderInstance:
-    Type: AWS::EC2::Instance
+  SpotFleetRole:
+    Type: AWS::IAM::Role
     Properties:
-      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', x64]
-      InstanceType: m4.large
-      KeyName: mykola
-      SecurityGroupIds:
-      - !GetAtt EC2SecurityGroup.GroupId
-      SubnetId: !Ref RDSSubnetC
-      Monitoring: false
-      # NetworkInterfaces:
-      #   - NetworkInterfaceId: !Ref LoaderInterface
-      #     DeviceIndex: 0
-      Tags:
-      - Key: iit-billing-tag
-        Value: pmmdemo
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole
+      AssumeRolePolicyDocument:
+        Version: 2008-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: spotfleet.amazonaws.com
+          Action: sts:AssumeRole
 
-          set -o xtrace
-
-          sleep 60
-          yum -y install git bind-utils
-          yum -y install https://repo.percona.com/release/7/RPMS/x86_64/sysbench-1.0.10-1.el7.x86_64.rpm \
-                         https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-client-57-5.7.19-17.1.el7.x86_64.rpm \
-                         https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-shared-57-5.7.19-17.1.el7.x86_64.rpm \
-                         https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-shared-compat-57-5.7.19-17.1.el7.x86_64.rpm
-          git clone https://github.com/percona/pmm-demo /opt/pmm-demo
-          cd /opt/pmm-demo
-          env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL57.Endpoint.Address}
-          env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL56.Endpoint.Address}
-          env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora1.Endpoint.Address}
-          env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora2.Endpoint.Address}
-
-#  LoaderInterface:
-#    Type: AWS::EC2::NetworkInterface
-#    Properties:
-#      SubnetId: !Ref RDSSubnetA
-#      Description: Interface for controlling sysbench traffic
-#      GroupSet: 
-#      - !GetAtt EC2SecurityGroup.GroupId
-#      SourceDestCheck: true
-#      Tags:
-#      - Key: iit-billing-tag
-#        Value: pmmdemo
-
-  LoaderIp:
-    Type: AWS::EC2::EIP
+  LoaderSpotInstance:
+    Type: AWS::EC2::SpotFleet
     Properties:
-      InstanceId: !Ref LoaderInstance
-      Domain: vpc
+      SpotFleetRequestConfigData:
+        SpotPrice: 0.05
+        TargetCapacity: 1
+        IamFleetRole: !GetAtt SpotFleetRole.Arn
+# AllocationStrategy: String
+# ExcessCapacityTerminationPolicy: String
+# ReplaceUnhealthyInstances: Boolean
+# TerminateInstancesWithExpiration: Boolean
+# ValidFrom: String
+# ValidUntil: String
+        Type: maintain
+        LaunchSpecifications:
+        - WeightedCapacity: 5
+          ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', x64]
+          InstanceType: m4.large
+          KeyName: mykola
+          SecurityGroups:
+          - GroupId: !GetAtt EC2SecurityGroup.GroupId
+          SubnetId: !Join ['', [!Ref RDSSubnetA, ', ', !Ref RDSSubnetB, ', ', !Ref RDSSubnetC]]
+          Monitoring:
+            Enabled: false
+          UserData:
+            Fn::Base64: !Sub |
+              #!/bin/bash
 
-#  AssociateLoaderIp:
-#    Type: AWS::EC2::EIPAssociation
-#    Properties:
-#      AllocationId: !GetAtt LoaderIp.AllocationId
-#      NetworkInterfaceId: !Ref LoaderInterface
+              set -o xtrace
+
+              sleep 120
+              yum -y makecache
+              yum -y install git bind-utils
+              yum -y install https://repo.percona.com/release/7/RPMS/x86_64/sysbench-1.0.10-1.el7.x86_64.rpm \
+                             https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-client-57-5.7.19-17.1.el7.x86_64.rpm \
+                             https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-shared-57-5.7.19-17.1.el7.x86_64.rpm \
+                             https://repo.percona.com/release/7/RPMS/x86_64/Percona-Server-shared-compat-57-5.7.19-17.1.el7.x86_64.rpm
+              git clone https://github.com/percona/pmm-demo /opt/pmm-demo
+              cd /opt/pmm-demo
+              env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL57.Endpoint.Address}
+              env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL56.Endpoint.Address}
+              env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora1.Endpoint.Address}
+              env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora2.Endpoint.Address}
 
 Outputs:
   PMMAccessKey:
