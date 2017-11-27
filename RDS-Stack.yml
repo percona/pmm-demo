@@ -433,7 +433,7 @@ Resources:
   ## CharacterSetName: String
       CopyTagsToSnapshot: true
       DBClusterIdentifier: !Ref DBACluster
-      DBInstanceClass: db.t2.small
+      DBInstanceClass: db.t2.medium
       DBInstanceIdentifier: !Ref DBA1Name
   ## DBName: !Ref DB56Name
       DBParameterGroupName: !Ref AuroraParameterGroup
@@ -480,7 +480,7 @@ Resources:
   ## CharacterSetName: String
       CopyTagsToSnapshot: true
       DBClusterIdentifier: !Ref DBACluster
-      DBInstanceClass: db.t2.small
+      DBInstanceClass: db.t2.medium
       DBInstanceIdentifier: !Ref DBA2Name
   ## DBName: !Ref DB56Name
       DBParameterGroupName: !Ref AuroraParameterGroup
