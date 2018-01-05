@@ -30,15 +30,6 @@ Parameters:
     AllowedPattern: '[a-zA-Z][\-a-zA-Z0-9]*'
     ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
 
-  DBA2Name:
-    Default: rds-aurora2
-    Description: The database name
-    Type: String
-    MinLength: 1
-    MaxLength: 64
-    AllowedPattern: '[a-zA-Z][\-a-zA-Z0-9]*'
-    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
-
   DBUser:
     NoEcho: true
     Description: The database admin account password
@@ -95,6 +86,7 @@ Resources:
           - Effect: Allow
             Action:
             - logs:DescribeLogStreams
+            - logs:FilterLogEvents
             - logs:GetLogEvents
             Resource:
             - 'arn:aws:logs:*:*:log-group:RDSOSMetrics:*'
@@ -289,7 +281,7 @@ Resources:
   # CharacterSetName: String
       CopyTagsToSnapshot: true
   # DBClusterIdentifier: String
-      DBInstanceClass: db.t2.small
+      DBInstanceClass: db.t2.micro
       DBInstanceIdentifier: !Ref DB57Name
   # DBName: !Ref DB57Name
       DBParameterGroupName: !Ref MySQL57ParameterGroup
@@ -348,7 +340,7 @@ Resources:
   # CharacterSetName: String
       CopyTagsToSnapshot: true
   # DBClusterIdentifier: String
-      DBInstanceClass: db.t2.small
+      DBInstanceClass: db.t2.micro
       DBInstanceIdentifier: !Ref DB56Name
   # DBName: !Ref DB56Name
       DBParameterGroupName: !Ref MySQL56ParameterGroup
@@ -401,7 +393,7 @@ Resources:
     Properties:
   # AvailabilityZones:
   #   - String
-      BackupRetentionPeriod: 35
+      BackupRetentionPeriod: 1
   # DatabaseName: !Ref DBA1Name
   # DBClusterParameterGroupName: String
       DBSubnetGroupName: !Ref RDSDBSubnetGroup
@@ -433,55 +425,8 @@ Resources:
   ## CharacterSetName: String
       CopyTagsToSnapshot: true
       DBClusterIdentifier: !Ref DBACluster
-      DBInstanceClass: db.t2.medium
+      DBInstanceClass: db.t2.small
       DBInstanceIdentifier: !Ref DBA1Name
-  ## DBName: !Ref DB56Name
-      DBParameterGroupName: !Ref AuroraParameterGroup
-  ## DBSecurityGroups:
-  ##  - String
-  # DBSnapshotIdentifier: String
-      DBSubnetGroupName: !Ref RDSDBSubnetGroup
-  # Domain: String
-  # DomainIAMRoleName: String
-      Engine: aurora
-  # EngineVersion: 5.6
-  # Iops: Number
-  # KmsKeyId: String
-  # LicenseModel: String
-  ## MasterUsername: !Ref DBUser
-  ## MasterUserPassword: !Ref DBPassword
-      MonitoringInterval: 60
-      MonitoringRoleArn: !GetAtt MonitoringRole.Arn
-  ## MultiAZ: false
-  ## OptionGroupName: String
-  ## Port: 3306
-  ## PreferredBackupWindow: String
-  ## PreferredMaintenanceWindow: String
-      PubliclyAccessible: true
-  ## SourceDBInstanceIdentifier: String
-      StorageEncrypted: false
-  ## StorageType: standard
-      Tags:
-      - Key: iit-billing-tag
-        Value: pmmdemo
-  # Timezone: String
-  ## VPCSecurityGroups:
-  ## - !GetAtt RDSSecurityGroup.GroupId
-    DeletionPolicy: Delete
-
-  Aurora2:
-    Type: AWS::RDS::DBInstance
-    Properties:
-  ## AllocatedStorage: 60
-      AllowMajorVersionUpgrade: true
-      AutoMinorVersionUpgrade: true
-  # AvailabilityZone: String
-  ## BackupRetentionPeriod: 0
-  ## CharacterSetName: String
-      CopyTagsToSnapshot: true
-      DBClusterIdentifier: !Ref DBACluster
-      DBInstanceClass: db.t2.medium
-      DBInstanceIdentifier: !Ref DBA2Name
   ## DBName: !Ref DB56Name
       DBParameterGroupName: !Ref AuroraParameterGroup
   ## DBSecurityGroups:
@@ -571,7 +516,6 @@ Resources:
               env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL57.Endpoint.Address}
               env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${MySQL56.Endpoint.Address}
               env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora1.Endpoint.Address}
-              env MYSQL_USER="${DBUser}" MYSQL_PASSWORD="${DBPassword}" ./install rds ${Aurora2.Endpoint.Address}
 
 Outputs:
   PMMAccessKey:
@@ -592,7 +536,4 @@ Outputs:
     Description: CLI connection string
     Value: !Join ['', ['mysql -h ', !GetAtt Aurora1.Endpoint.Address, ' -P ',
         !GetAtt Aurora1.Endpoint.Port, ' -u ', !Ref DBUser, ' -p', !Ref DBPassword]]
-  ConnectionStringA2:
-    Description: CLI connection string
-    Value: !Join ['', ['mysql -h ', !GetAtt Aurora2.Endpoint.Address, ' -P ',
-        !GetAtt Aurora2.Endpoint.Port, ' -u ', !Ref DBUser, ' -p', !Ref DBPassword]]
+
