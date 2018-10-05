@@ -19,7 +19,7 @@ fi
 while true; do
     sysbench \
         $SB_CONNECTION \
-        --threads=64 \
+        --threads=1 \
         --report-interval=10 \
         --time=300 \
         --events=0 \

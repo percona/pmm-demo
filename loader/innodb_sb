@@ -35,8 +35,8 @@ sysbench \
 while true; do
     sysbench \
         $SB_CONNECTION \
-        --rate=20 \
-        --threads=64 \
+        --rate=1 \
+        --threads=1 \
         --report-interval=10 \
         --time=0 \
         --events=0 \
