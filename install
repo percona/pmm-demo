@@ -5,6 +5,7 @@ set -o xtrace
 
 declare -A SERVICES=(
     ["rds"]="innodb_sb innodb_sb_spike"
+    ["rds-dev"]="rds_test_sb"
     ["md"]="innodb_sb innodb_sb_spike innodb_extra aria_sb deadlock_holder deadlock_requestor defrag_sb defrag_extra onlineddl_sb onlineddl_extra"
     ["ps55"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
     ["ps56"]="innodb_sb innodb_sb_spike innodb_extra myisam_sb myisam_extra small_sb small_extra"
