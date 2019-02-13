@@ -1,0 +1,54 @@
+#!/bin/sh
+
+set -o xtrace
+
+DBNAME=sbtest
+ENGINE=innodb
+TABLE_SIZE=1000000
+TEST=/usr/share/sysbench/oltp_read_write.lua
+SOCKET=${1:-/var/lib/mysql/mysql.sock}
+MYSQL_USER=sbtest
+MYSQL_PASSWORD=sbtest
+
+if [ -S "$SOCKET" ]; then
+    CONNECTION="--socket=$SOCKET"
+    SB_CONNECTION="--mysql-socket=$SOCKET"
+else
+    CONNECTION="--host=$SOCKET"
+    SB_CONNECTION="--mysql-host=$SOCKET"
+fi
+
+mysql \
+    $CONNECTION \
+    --socket=$SOCKET \
+    --user=$MYSQL_USER \
+    --password=$MYSQL_PASSWORD \
+    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
+sysbench \
+    $SB_CONNECTION \
+    --db-driver=mysql \
+    --mysql-user=$MYSQL_USER  \
+    --mysql-password=$MYSQL_PASSWORD \
+    --mysql-db=$DBNAME \
+    --mysql_storage_engine=$ENGINE \
+    --table_size=$TABLE_SIZE \
+    $TEST \
+    prepare
+
+while true; do
+    sysbench \
+        $SB_CONNECTION \
+        --rate=5 \
+        --threads=64 \
+        --report-interval=1 \
+        --time=0 \
+        --db-driver=mysql \
+        --mysql-user=$MYSQL_USER \
+        --mysql-password=$MYSQL_PASSWORD \
+        --mysql-db=$DBNAME \
+        --mysql_storage_engine=$ENGINE \
+        --table_size=$TABLE_SIZE \
+        $TEST \
+        run
+    sleep 60
+done
