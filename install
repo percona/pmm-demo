@@ -39,7 +39,7 @@ create_pgsql_loader() {
     local LOADER=$1
     local HOST=$2
 
-	cat - <<-EOF >/etc/systemd/system/loader-${LOADER}-${HOST}.service
+    cat - <<-EOF >/etc/systemd/system/loader-${LOADER}-${HOST}.service
 		[Unit]
 		Description=PMM Loader ${LOADER} for ${HOST} socket
 
@@ -82,50 +82,50 @@ create_mysql_loader() {
 }
 
 main() {
-	local TYPE=$1
-	if [ "$TYPE" == 'pg' ]; then
-		create_pgsql_loader $1 $2
-	else
-		create_mysql_loader $1 $2
-	fi
+    local TYPE=$1
+    if [ "$TYPE" == 'pg' ]; then
+        create_pgsql_loader $1 $2
+    else
+        create_mysql_loader $1 $2
+    fi
 }
 
 pgsql_loader() {
-	local TYPE=$1
+    local TYPE=$1
     local HOST=$2
 
-	if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
+    if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
         echo "unknown server type"
         echo "usage: $0 {pg} host"
         exit 1
     fi
 
-	remove_all "$HOST"
+    remove_all "$HOST"
 
     if [ nslookup "$HOST"]; then
-		echo $HOST
+        echo $HOST
     else
         echo "cannot find $HOST or host"
         echo "usage: $0 {pg} $HOST"
         exit 1
     fi
-	for LOADER in ${SERVICES[$TYPE]}; do
+    for LOADER in ${SERVICES[$TYPE]}; do
         create_pgsql_loader "$LOADER" "$HOST"
     done
 }
 
 mysql_loader() {
-	local TYPE=$1
+    local TYPE=$1
     local SOCKET_PATH=$2
     local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/[.].*//')
 
-	if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
+    if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
         echo "unknown server type"
         echo "usage: $0 {ps|pxc|mo|ms|md} /path/to/service.socket"
         exit 1
     fi
 
-	remove_all "$SOCKET_NAME"
+    remove_all "$SOCKET_NAME"
 
     if [ -S "$SOCKET_PATH" ]; then
         CONNECTION="--socket=$SOCKET_PATH"
@@ -137,12 +137,12 @@ mysql_loader() {
         exit 1
     fi
 
-	CONNECTION+=" --user ${MYSQL_USER:-root}"
-	[ -n "$MYSQL_PASSWORD" ] && CONNECTION+=" -p${MYSQL_PASSWORD}" || :
+    CONNECTION+=" --user ${MYSQL_USER:-root}"
+    [ -n "$MYSQL_PASSWORD" ] && CONNECTION+=" -p${MYSQL_PASSWORD}" || :
 
-	mysql $CONNECTION < $ROOT_DIR/grants.sql
+    mysql $CONNECTION < $ROOT_DIR/grants.sql
 
-	for LOADER in ${SERVICES[$TYPE]}; do
+    for LOADER in ${SERVICES[$TYPE]}; do
         create_mysql_loader "$LOADER" "$SOCKET_PATH" "$SOCKET_NAME"
     done
 }
