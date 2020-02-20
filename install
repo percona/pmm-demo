@@ -18,23 +18,47 @@ declare -A SERVICES=(
     ["pxc57-2"]="innodb_sb_2 innodb_sb_spike_2 innodb_extra_2"
     ["pxc57-3"]="innodb_sb_3 innodb_sb_spike_3 innodb_extra_3 cluster_mess"
     ["psrocksdb"]="innodb_sb innodb_sb_spike innodb_extra small_sb small_extra rocksdb_sb rocksdb_extra"
+    ["pg"]="pg"
 )
 
 ROOT_DIR=$(realpath "$(dirname $0)")
 
 remove_all() {
-    local SOCKET_NAME=$1
+    local NAME=$1
     pushd $ROOT_DIR/loader
         for LOADER in $(ls); do
-            if [ -e "/etc/systemd/system/loader-${LOADER}-${SOCKET_NAME}.service" ]; then
-                systemctl --no-reload disable "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
-                systemctl stop "loader-${LOADER}-${SOCKET_NAME}" > /dev/null 2>&1 || :
+            if [ -e "/etc/systemd/system/loader-${LOADER}-${NAME}.service" ]; then
+                systemctl --no-reload disable "loader-${LOADER}-${NAME}" > /dev/null 2>&1 || :
+                systemctl stop "loader-${LOADER}-${NAME}" > /dev/null 2>&1 || :
             fi
         done
     popd
 }
 
-create_loader() {
+create_pgsql_loader() {
+    local LOADER=$1
+    local HOST=$2
+
+    cat - <<-EOF >/etc/systemd/system/loader-${LOADER}-${HOST}.service
+		[Unit]
+		Description=PMM Loader ${LOADER} for ${HOST} socket
+
+		[Service]
+		StartLimitInterval=5
+		StartLimitBurst=10
+		ExecStart=$ROOT_DIR/loader/${LOADER} $HOST
+		Restart=always
+		RestartSec=120
+
+		[Install]
+		WantedBy=multi-user.target
+	EOF
+    systemctl preset "loader-${LOADER}-${HOST}"
+    systemctl enable "loader-${LOADER}-${HOST}"
+    systemctl start  "loader-${LOADER}-${HOST}"
+}
+
+create_mysql_loader() {
     local LOADER=$1
     local SOCKET_PATH=$2
     local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/[.].*//')
@@ -59,6 +83,33 @@ create_loader() {
 
 main() {
     local TYPE=$1
+    if [ "$TYPE" == 'pg' ]; then
+        pgsql_loader $1 $2
+    else
+        mysql_loader $1 $2
+    fi
+}
+
+pgsql_loader() {
+    local TYPE=$1
+    local HOST=$2
+
+    if [[ -z "$TYPE" ]] || [[ -z "${SERVICES[$TYPE]}" ]]; then
+        echo "unknown server type"
+        echo "usage: $0 {pg} host"
+        exit 1
+    fi
+
+    remove_all "$HOST"
+
+    for LOADER in ${SERVICES[$TYPE]}; do
+		echo ${SERVICES[$TYPE]}
+        create_pgsql_loader "$LOADER" "$HOST"
+    done
+}
+
+mysql_loader() {
+    local TYPE=$1
     local SOCKET_PATH=$2
     local SOCKET_NAME=$(basename $SOCKET_PATH | sed -e 's/[.].*//')
 
@@ -67,6 +118,9 @@ main() {
         echo "usage: $0 {ps|pxc|mo|ms|md} /path/to/service.socket"
         exit 1
     fi
+
+    remove_all "$SOCKET_NAME"
+
     if [ -S "$SOCKET_PATH" ]; then
         CONNECTION="--socket=$SOCKET_PATH"
     elif nslookup "$SOCKET_PATH"; then
@@ -76,14 +130,14 @@ main() {
         echo "usage: $0 {ps|pxc|mo|ms|md} /path/to/service.socket"
         exit 1
     fi
+
     CONNECTION+=" --user ${MYSQL_USER:-root}"
     [ -n "$MYSQL_PASSWORD" ] && CONNECTION+=" -p${MYSQL_PASSWORD}" || :
 
-    remove_all "$SOCKET_NAME"
-
     mysql $CONNECTION < $ROOT_DIR/grants.sql
+
     for LOADER in ${SERVICES[$TYPE]}; do
-        create_loader "$LOADER" "$SOCKET_PATH" "$SOCKET_NAME"
+        create_mysql_loader "$LOADER" "$SOCKET_PATH" "$SOCKET_NAME"
     done
 }
 
