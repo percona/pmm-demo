@@ -1,18 +1,16 @@
 #!/bin/sh
 
 set -o xtrace
-DBNAME=small
-
-psql \
-    --host=$HOST \
-    --user=sbtest \
-    -e "CREATE DATABASE IF NOT EXISTS $DBNAME"
+DBNAME=postgres
+USER=postgres
+PASS=postgres
+HOST=$1
 
 sysbench \
     --db-driver=pgsql \
     --pgsql-host=$HOST \
-    --pgsql-user=sbtest \
-    --pgsql-password=sbtest \
+    --pgsql-user=$USER \
+    --pgsql-password=$PASS \
     --pgsql-db=$DBNAME \
     /usr/share/sysbench/oltp_read_write.lua \
     prepare
@@ -27,8 +25,8 @@ while true; do
         --rand-type=pareto \
         --db-driver=pgsql \
         --pgsql-host=$HOST \
-        --pgsql-user=sbtest \
-        --pgsql-password=sbtest \
+        --pgsql-user=$USER \
+        --pgsql-password=$PASS \
         --pgsql-db=$DBNAME \
         /usr/share/sysbench/oltp_read_write.lua \
         run

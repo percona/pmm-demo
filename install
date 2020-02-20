@@ -46,7 +46,7 @@ create_pgsql_loader() {
 		[Service]
 		StartLimitInterval=5
 		StartLimitBurst=10
-		ExecStart=$ROOT_DIR/loader/${LOADER} $PATH
+		ExecStart=$ROOT_DIR/loader/${LOADER} $HOST
 		Restart=always
 		RestartSec=120
 
@@ -84,9 +84,9 @@ create_mysql_loader() {
 main() {
     local TYPE=$1
     if [ "$TYPE" == 'pg' ]; then
-        create_pgsql_loader $1 $2
+        pgsql_loader $1 $2
     else
-        create_mysql_loader $1 $2
+        mysql_loader $1 $2
     fi
 }
 
@@ -102,14 +102,8 @@ pgsql_loader() {
 
     remove_all "$HOST"
 
-    if [ nslookup "$HOST"]; then
-        echo $HOST
-    else
-        echo "cannot find $HOST or host"
-        echo "usage: $0 {pg} $HOST"
-        exit 1
-    fi
     for LOADER in ${SERVICES[$TYPE]}; do
+		echo ${SERVICES[$TYPE]}
         create_pgsql_loader "$LOADER" "$HOST"
     done
 }
